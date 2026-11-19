@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Grand Stay Hotel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            color: #222;
+        }
+
+        header {
+            background: #142d4e;
+            color: white;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 35px 15px;
+            background: #dce8f5;
+        }
+
+        .card {
+            background: white;
+            max-width: 550px;
+            margin: 25px auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #ccc;
+        }
+
+        input, select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin: 9px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        button {
+            width: 100%;
+            background: #142d4e;
+            color: white;
+            padding: 13px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2465a5;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Grand Stay Hotel</h1>
+    <p>Your Comfort, Our Priority</p>
+</header>
+
+<div class="hero">
+    <h2>Book Your Perfect Stay!</h2>
+    <p>Choose your room and reserve your experience.</p>
+</div>
+
+<div class="card">
+    <h2>Available Rooms</h2>
+    <div id="rooms">Loading rooms...</div>
+</div>
+
+<div class="card">
+    <h2>Book Your Room</h2>
+
+    <form id="bookingForm">
+        <input name="guest_name" placeholder="Your Full Name" required>
+
+        <input name="email" type="email"
+               placeholder="Email Address" required>
+
+        <select name="room_id" id="room_id" required>
+            <option value="">Select Room</option>
+        </select>
+
+        <label>Check-in Date</label>
+        <input name="check_in" type="date" required>
+
+        <label>Check-out Date</label>
+        <input name="check_out" type="date" required>
+
+        <input name="guests" type="number"
+               min="1" max="10" value="1" required>
+
+        <button type="submit">Confirm Booking</button>
+    </form>
+
+    <div id="message"></div>
+</div>
+
+<div class="card">
+    <h2>Recent Bookings</h2>
+    <button onclick="loadBookings()">Refresh Bookings</button>
+    <div id="bookings"></div>
+</div>
+
+<footer>
+    <p>Grand Stay Hotel | Powered by Docker</p>
+</footer>
+
+<script>
+async function loadRooms() {
+    try {
+        const response = await fetch('/api/rooms');
+        if (!response.ok) throw new Error();
+
+        const rooms = await response.json();
+
+        document.getElementById('rooms').innerHTML =
+            rooms.map(room =>
+                `<p><b>${room.name}</b> - ₹${room.price} / night</p>`
+            ).join('');
+
+        document.getElementById('room_id').innerHTML =
+            '<option value="">Select Room</option>' +
+            rooms.map(room =>
+                `<option value="${room.id}">${room.name} - ₹${room.price}</option>`
+            ).join('');
+
+    } catch {
+        document.getElementById('rooms').textContent =
+            'Unable to load rooms. Please refresh.';
+    }
+}
+
+document.getElementById('bookingForm').addEventListener(
+    'submit', async function(event) {
+        event.preventDefault();
+
+        const data = Object.fromEntries(new FormData(this));
+
+        const message = document.getElementById('message');
+        message.textContent = 'Processing booking...';
+
+        try {
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            message.textContent = response.ok
+                ? result.message + ' Booking ID: ' + result.booking_id
+                : result.error;
+
+            if (response.ok) {
+                this.reset();
+                loadBookings();
+            }
+
+        } catch {
+            message.textContent = 'Booking failed. Please try again.';
+        }
+    }
+);
+
+async function loadBookings() {
+    try {
+        const response = await fetch('/api/bookings');
+        if (!response.ok) throw new Error();
+
+        const bookings = await response.json();
+
+        document.getElementById('bookings').innerHTML =
+            bookings.length
+            ? bookings.map(b =>
+                `<p><b>${b.guest_name}</b> - ${b.room_name}<br>
+                ${b.check_in} to ${b.check_out}</p>`
+              ).join('')
+            : '<p>No bookings yet.</p>';
+
+    } catch {
+        document.getElementById('bookings').textContent =
+            'Unable to load bookings.';
+    }
+}
+
+loadRooms();
+loadBookings();
+</script>
+
+</body>
+</html>

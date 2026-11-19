@@ -189,7 +189,7 @@ Ensure TCP port `8081` is allowed in your EC2 security group, preferably only fr
 
 **Vaibhav Gadge**
 
-🎓 Final-Year BCA Student | Aspiring Cloud & DevOps Engineer
+🎓 Aspiring Cloud & DevOps Engineer
 
 🔗 **GitHub:** [@vaibhuz](https://github.com/vaibhuz)
 
